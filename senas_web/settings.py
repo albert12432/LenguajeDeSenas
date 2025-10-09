@@ -75,8 +75,15 @@ WSGI_APPLICATION = 'senas_web.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'mssql',
+        'NAME': 'LsDB',    
+        'USER': 'userdb',
+        'PASSWORD': 'userdb',
+        'HOST': 'ALDYCASERES\\SQLEXPRESS',  # Instancia SQL Server
+        'PORT': '',                          # Vacío si usás instancia nombrada
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',
+        },
     }
 }
 
