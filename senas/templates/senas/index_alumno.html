@@ -1,18 +1,21 @@
-<!-- filepath: c:\Users\nahuel lozano\Desktop\lenguajeDeSenas\senas\templates\senas\predecir.html -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Predicción de Seña</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 30px; }
-    #resultado { font-size: 1.5em; color: #007b00; margin-top: 20px; }
-    #camara { border: 2px solid #333; }
-    button { margin-top: 10px; padding: 10px 20px; font-size: 1em; }
-  </style>
-</head>
-<body>
-  <h2>Predicción de Seña desde Cámara</h2>
+    <meta charset="UTF-8">
+    <title>Panel del Alumno</title>
+    <link rel="stylesheet" href="{% static 'css/alumno.css' %}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+      
+  </head>
+<body class="p-4">
+  
+      <p>¡BIENVENID@ {{ alumno.nombre }}!</p>
+
+
+    <p>Has iniciado sesión correctamente.</p>
+
+       <h2>Predicción de Seña desde Cámara</h2>
 
   <!-- Video en vivo -->
   <video id="camara" width="400" height="300" autoplay></video>
@@ -62,7 +65,8 @@
       const dataUrl = canvas.toDataURL('image/png');
       imagenInput.value = dataUrl;
     }
+   
   </script>
-  <a href="{% url 'logout' %}">Cerrar sesión</a>
+    <a href="{% url 'logout' %}">Cerrar sesión</a>
 </body>
 </html>

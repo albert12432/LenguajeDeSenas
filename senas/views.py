@@ -13,6 +13,7 @@ from predecir_secuencias import predecir_desde_imagen
 import base64
 from PIL import Image
 from io import BytesIO
+from .models import Alumno  # Importá tu modelo de alumnos
 
 # 🔹 Ruta dinámica al archivo entrenar_modelo.py (portátil)
 BASE_DIR = Path(__file__).resolve().parents[2]  # Sube dos niveles desde /senas/views.py
@@ -32,18 +33,35 @@ def index(request):
 
 
 # Vista de inicio de sesión
-def login_view(request):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
 
+def login_view(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        # Primero intentamos autenticar como profesor (usuario Django)
         user = authenticate(username=username, password=password)
         if user:
             login_django(request, user)
+            # Redirigir a página de profesores
             return redirect('index')
+
         else:
-            return render(request, 'senas/login.html', {'error': 'Credenciales inválidas'})   
-    return render(request, 'senas/login.html', {})
+            # Intentamos autenticar como alumno (manual)
+            try:
+                alumno = Alumno.objects.get(username=username, contrasena=password)
+                # Guardamos el username en sesión para identificarlo
+                request.session['alumno_id'] = alumno.id
+                return redirect('index_alumno')
+            except Alumno.DoesNotExist:
+                return render(request, "senas/login.html", {"error": "Credenciales inválidas"})
+
+    return render(request, "senas/login.html")
+
+
+# Alumno
+def index_alumno(request):
+    return render(request, 'senas/index_alumno.html')
 
 
 # Cerrar sesión
@@ -130,3 +148,5 @@ def eliminar_alumno(request, alumno_id):
     alumno = get_object_or_404(Alumno, id=alumno_id)
     alumno.delete()
     return redirect('lista_alumnos')
+
+

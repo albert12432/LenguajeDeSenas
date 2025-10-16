@@ -73,21 +73,19 @@ WSGI_APPLICATION = 'senas_web.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
+DATABASES ={
+    'default':{
         'ENGINE': 'mssql',
         'NAME': 'LsDB',    
-        'USER': 'userdb',
-        'PASSWORD': 'userdb',
-        'HOST': 'ALDYCASERES',       
+        'USER': 'Gime',
+        'PASSWORD': '123456',
+        'HOST': 'DESKTOP-CO6OG56',       
         'PORT': '',                 
         'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
-            'host_is_server': True, # Para asegurar que HOST se trata como SERVER
-            'server': 'ALDYCASERES\\SQLEXPRESS',
     }
 }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
