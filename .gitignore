@@ -1,6 +1,12 @@
 # Entorno virtual
 .venv/
 venv/
+<<<<<<< HEAD
 env/__pycache__/
 *.pyc
 db.sqlite3
+=======
+env/
+# Ignorar carpeta de secuencias críticas
+data/secuencias/5/
+>>>>>>> c6934aa08f2ee0942b80b3f9cb94130b58d1ad8e

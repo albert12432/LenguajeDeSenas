@@ -14,6 +14,9 @@ import base64
 from PIL import Image
 from io import BytesIO
 from .models import Alumno  # Importá tu modelo de alumnos
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 # 🔹 Ruta dinámica al archivo entrenar_modelo.py (portátil)
 BASE_DIR = Path(__file__).resolve().parents[2]  # Sube dos niveles desde /senas/views.py
@@ -125,14 +128,29 @@ def administracion(request):
 # Agregar alumno
 @login_required
 def agregar_alumno(request):
+    mensaje_exito = None
+    mensaje_error = None
+
     if request.method == 'POST':
         form = AlumnoForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('lista_alumnos')
+            mensaje_exito = "✅ Paso 2 de 2: Alumno agregado con éxito."
+            form = AlumnoForm()  # limpia el formulario
+        else:
+            # Solo mostramos mensaje de error si algún campo requerido está vacío
+            if form.errors.get('nombre'):
+                mensaje_error = "⚠️ Debe ingresar un nombre."
+            else:
+                mensaje_error = "⚠️ Por favor revise los datos ingresados."
     else:
         form = AlumnoForm()
-    return render(request, 'senas/agregar_alumno.html', {'form': form})
+
+    return render(request, 'senas/agregar_alumno.html', {
+        'form': form,
+        'mensaje_exito': mensaje_exito,
+        'mensaje_error': mensaje_error
+    })
 
 
 # Listar alumnos
@@ -147,6 +165,7 @@ def lista_alumnos(request):
 def eliminar_alumno(request, alumno_id):
     alumno = get_object_or_404(Alumno, id=alumno_id)
     alumno.delete()
+    messages.success(request, "✅ Alumno eliminado con éxito")
     return redirect('lista_alumnos')
 
 
