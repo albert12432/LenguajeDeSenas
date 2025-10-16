@@ -2,3 +2,5 @@
 .venv/
 venv/
 env/
+# Ignorar carpeta de secuencias críticas
+data/secuencias/5/
