@@ -108,10 +108,10 @@ def administracion(request):
 
 
 # Agregar alumno
-
 @login_required
 def agregar_alumno(request):
     mensaje_exito = None
+    mensaje_error = None
 
     if request.method == 'POST':
         form = AlumnoForm(request.POST)
@@ -122,16 +122,18 @@ def agregar_alumno(request):
         else:
             # Solo mostramos mensaje de error si algún campo requerido está vacío
             if form.errors.get('nombre'):
-                mensaje_exito = "⚠️ Debe ingresar un nombre."
+                mensaje_error = "⚠️ Debe ingresar un nombre."
             else:
-                mensaje_exito = "⚠️ Por favor revise los datos ingresados."
+                mensaje_error = "⚠️ Por favor revise los datos ingresados."
     else:
         form = AlumnoForm()
 
     return render(request, 'senas/agregar_alumno.html', {
         'form': form,
-        'mensaje_exito': mensaje_exito
+        'mensaje_exito': mensaje_exito,
+        'mensaje_error': mensaje_error
     })
+
 
 # Listar alumnos
 @login_required

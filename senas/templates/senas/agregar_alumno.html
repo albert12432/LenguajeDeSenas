@@ -36,19 +36,23 @@
         <div class="form-container">
             <h2>Agregar alumno</h2>
      <!-- Mostrar solo si todavía no se completó -->
-    {% if not mensaje_exito %}
-      <p class="paso-texto">Paso 1 de 2: Ingrese los datos del nuevo alumno 🧾</p>
-    {% endif %}
-     {% if mensaje_exito %}
-     <div class="alert-overlay">
-      <div class="alert-box">
-        <p>{{ mensaje_exito }}</p>
-        <form method="get">
-          <a href="{% url 'lista_alumnos' %}" class="alert-btn">Aceptar</a>
-        </form>
-      </div>
-    </div>
-    {% endif %}
+{% if mensaje_exito %}
+<div class="alert-overlay">
+  <div class="alert-box">
+    <p>{{ mensaje_exito }}</p>
+    <a href="{% url 'lista_alumnos' %}" class="alert-btn">Aceptar</a>
+  </div>
+</div>
+{% endif %}
+
+{% if mensaje_error %}
+<div class="alert-overlay">
+  <div class="alert-box">
+    <p>{{ mensaje_error }}</p>
+    <a href="#" class="alert-btn" onclick="this.parentElement.parentElement.style.display='none'; return false;">Aceptar</a>
+  </div>
+</div>
+{% endif %}
     <form method="POST">
       {% csrf_token %}
       {{ form.as_p }}
