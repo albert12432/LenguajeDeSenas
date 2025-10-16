@@ -1,21 +1,72 @@
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Agregar alumno</title>
+    <link rel="stylesheet" href="{% static 'css/agregar_alumno.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h2>Agregar alumno</h2>
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar</button>
-    </form>
- <button>
-    <a href="{% url 'index' %}" class="btn-volver">⬅️ Volver</a>
+    <!-- ======= Navegador ======= -->
+  <header class="navbar">
+    <div class="navbar-left">
+      <button class="menu-toggle" id="menu-toggle">&#9776;</button>
+      <img src="{% static 'css/lengua-senas.png' %}" alt="Logo" class="logo">
+      <h1 class="titulo">Lengua de Señas</h1>
+    </div>
+  </header>
+<!-- ======= Menu izquierda HAMBURGUESA ======= -->
+<nav id="sidebar" class="sidebar">
+  <div class="menu-content">
+    <h3>Entrenar</h3>
+    <a href="#">Abecedario</a>
+    <a href="#">Números</a>
+    <a href="#">Palabras</a>
 
-  </button>
+    <h3>Administración</h3>
+    <a href="{% url 'agregar_alumno' %}">Agregar alumno</a>
+    <a href="{% url 'lista_alumnos' %}">Lista de alumnos</a>
+    <a href="{% url 'logout' %}" class="cerrar-sesion">Cerrar sesión</a>
+  </div>
+</nav>
+
+<!-- ======= FORMULARIO ======= -->
+    <div class="main-content">
+        <div class="form-container">
+            <h2>Agregar alumno</h2>
+     <!-- Mostrar solo si todavía no se completó -->
+    {% if not mensaje_exito %}
+      <p class="paso-texto">Paso 1 de 2: Ingrese los datos del nuevo alumno 🧾</p>
+    {% endif %}
+     {% if mensaje_exito %}
+     <div class="alert-overlay">
+      <div class="alert-box">
+        <p>{{ mensaje_exito }}</p>
+        <form method="get">
+          <a href="{% url 'lista_alumnos' %}" class="alert-btn">Aceptar</a>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+    <form method="POST">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn-guardar">GUARDAR</button>
+    </form>
+    <a href="{% url 'index' %}" class="btn-volver"> Volver</a>
+  </div>
+ </div>
+
+      <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const toggleBtn = document.getElementById("menu-toggle");
+      const sidebar = document.getElementById("sidebar");
+
+      toggleBtn.addEventListener("click", function() {
+        sidebar.classList.toggle("active");
+      });
+    });
+  </script>
 </body>
 </html>
-      

@@ -77,17 +77,19 @@ DATABASES = {
     'default': {
         'ENGINE': 'mssql',
         'NAME': 'LsDB',    
-        'USER': 'userdb',
-        'PASSWORD': 'userdb',
-        'HOST': 'ALDYCASERES',       
+        'USER': 'user',
+        'PASSWORD': '1234',
+        'HOST': 'MAYQUIROZ\\SQLEXPRESS',       
         'PORT': '',                 
         'OPTIONS': {
             'driver': 'ODBC Driver 17 for SQL Server',
             'host_is_server': True, # Para asegurar que HOST se trata como SERVER
             'server': 'ALDYCASERES\\SQLEXPRESS',
-    }
 }
 }
+}
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
