@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # utils.py - Proyecto Holistic Unificado para Lengua de Señas
 
 import os
@@ -5,6 +6,7 @@ import cv2
 import numpy as np
 import mediapipe as mp
 import platform
+
 
 # ==== CONFIGURACIÓN CENTRAL ====
 class Config:
@@ -18,7 +20,8 @@ class Config:
     SEQUENCES_PER_CLASS = 30  # Cuántas secuencias se capturan por clase
 
     # Cantidad total de características (features) por frame
-    FEATURES = 147  # 2 manos (21x3x2 = 126), 2 hombros (2x3 = 6), rostro (5x3 = 15)
+    # 147 = 2 manos (126) + 2 hombros (6) + rostro (15)
+    FEATURES = 147
 
     # Rutas de salida del modelo y etiquetas
     MODEL_PATH = os.path.join(MODELS_DIR, "modelo_lstm.h5")
@@ -28,6 +31,13 @@ class Config:
     DETECTION_CONFIDENCE = 0.7
     TRACKING_CONFIDENCE = 0.5
     MODEL_COMPLEXITY = 1
+
+    # Parámetros de predicción en tiempo real
+    MIN_CONFIDENCE = 0.8
+    MIN_CONFIDENCE_GAP = 0.15
+    CONSISTENT_PREDICTIONS = 3
+    MAX_PREDICTION_AGE = 2.5
+
 
 # ==== UTILIDADES GENERALES ====
 
@@ -42,14 +52,17 @@ def print_system_info():
     print(f"Frames por secuencia: {Config.FRAMES_PER_SEQUENCE}")
     print("===============================")
 
+
 def create_directories(paths):
     """Crea las carpetas necesarias si no existen."""
     for path in paths:
         os.makedirs(path, exist_ok=True)
 
+
 def initialize_holistic():
     """
-    Inicializa el modelo Holistic de MediaPipe con los parámetros definidos en la configuración.
+    Inicializa el modelo Holistic de MediaPipe con los parámetros definidos
+    en la configuración.
     Devuelve el objeto de seguimiento corporal completo.
     """
     return mp.solutions.holistic.Holistic(
@@ -58,6 +71,7 @@ def initialize_holistic():
         min_detection_confidence=Config.DETECTION_CONFIDENCE,
         min_tracking_confidence=Config.TRACKING_CONFIDENCE
     )
+
 
 def setup_camera(index=0, width=1280, height=720):
     """
@@ -68,6 +82,7 @@ def setup_camera(index=0, width=1280, height=720):
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
     return cap
+
 
 # ==== PROCESAMIENTO DE LANDMARKS ====
 
@@ -107,22 +122,26 @@ def extract_holistic_landmarks(results):
 
     return np.array(data)
 
+
 def normalize_landmarks(landmarks):
     """
-    Normaliza los landmarks para que sean independientes de la posición y tamaño del cuerpo.
+    Normaliza los landmarks para que sean independientes de la posición y
+    tamaño del cuerpo.
     - Centra el conjunto en el punto medio
     - Escala dividiendo por la distancia máxima a ese centro
     """
     if landmarks is None or len(landmarks) != Config.FEATURES:
         return landmarks
 
+    landmarks = np.asarray(landmarks, dtype=np.float32)
     reshaped = landmarks.reshape(-1, 3)
     center = np.mean(reshaped, axis=0)
-    reshaped -= center
+    reshaped = reshaped - center
     scale = np.max(np.linalg.norm(reshaped, axis=1))
     if scale > 0:
-        reshaped /= scale
+        reshaped = reshaped / scale
     return reshaped.flatten()
+
 
 def validate_landmarks(landmarks):
     """
@@ -138,3 +157,38 @@ def validate_landmarks(landmarks):
     if np.any(np.isnan(landmarks)) or np.any(np.isinf(landmarks)):
         return False
     return True
+
+
+# ==== AUMENTO DE DATOS ====
+
+def augment_sequence(sequence, rotation_range=5, noise_level=0.005):
+    """
+    Aplica aumento de datos a una secuencia de landmarks.
+    - Rotación aleatoria en el plano XY.
+    - Ruido gaussiano.
+    Devuelve la secuencia con la misma forma (30, 147).
+    """
+    if sequence.shape != (Config.FRAMES_PER_SEQUENCE, Config.FEATURES):
+        return sequence.copy()
+
+    augmented_sequence = sequence.copy()
+
+    # Rotación aleatoria
+    angle = np.random.uniform(-rotation_range, rotation_range)
+    rad = np.deg2rad(angle)
+    rotation_matrix = np.array([
+        [np.cos(rad), -np.sin(rad), 0],
+        [np.sin(rad), np.cos(rad), 0],
+        [0, 0, 1]
+    ])
+
+    # Aplica rotación a cada frame
+    for i in range(len(augmented_sequence)):
+        frame = augmented_sequence[i].reshape(-1, 3)
+        rotated = frame @ rotation_matrix.T
+
+        # Añade ruido gaussiano
+        noise = np.random.normal(0, noise_level, rotated.shape)
+        augmented_sequence[i] = (rotated + noise).flatten()
+
+    return augmented_sequence

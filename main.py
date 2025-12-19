@@ -1,40 +1,80 @@
-# main.py - Menú principal del sistema de señas unificado
-
-import os
-import sys
-
-MENU = """
-==============================
- LENGUA DE SEÑAS UNIFICADA
-==============================
-1. Capturar nueva clase (letra, número o frase)
-2. Entrenar modelo LSTM
-3. Ejecutar predicción en tiempo real
-4. Salir
+# -*- coding: utf-8 -*-
+"""
+main.py - Sistema de Reconocimiento de Lengua de Señas
+Punto de entrada principal del sistema con interfaz dual (GUI/Web)
 """
 
+import sys
+import os
+
+# Asegurar que el directorio actual esté en el path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+
+def print_banner():
+    """Muestra un banner de bienvenida en consola"""
+    banner = """
+    ╔═══════════════════════════════════════════════════════════╗
+    ║                                                           ║
+    ║       🤟  SISTEMA DE LENGUA DE SEÑAS CON IA  🤟          ║
+    ║                                                           ║
+    ║       Reconocimiento en Tiempo Real con Deep Learning    ║
+    ║                                                           ║
+    ╚═══════════════════════════════════════════════════════════╝
+    
+    Iniciando selector de interfaz...
+    """
+    print(banner)
+
+
+def check_dependencies():
+    """Verifica que las dependencias principales estén instaladas"""
+    required = ['flask', 'cv2', 'mediapipe', 'tensorflow']
+    missing = []
+    
+    for module in required:
+        try:
+            __import__(module)
+        except ImportError:
+            missing.append(module)
+    
+    if missing:
+        print(f"\n⚠️  Dependencias faltantes: {', '.join(missing)}")
+        print("Instala con: pip install -r requirements.txt\n")
+        return False
+    return True
+
+
 def main():
-    while True:
-        os.system('cls' if os.name == 'nt' else 'clear')
-        print(MENU)
-        opcion = input("Seleccione una opción (1-4): ").strip()
+    """Inicia el selector de interfaz del sistema"""
+    print_banner()
+    
+    # Verificar dependencias
+    if not check_dependencies():
+        input("\nPresiona Enter para salir...")
+        sys.exit(1)
+    
+    print("✓ Todas las dependencias están instaladas")
+    print("✓ Abriendo selector de interfaz...\n")
+    
+    try:
+        from launcher import LauncherApp
+        app = LauncherApp()
+        app.mainloop()
+    except ImportError as e:
+        print(f"\n❌ Error: No se pudo importar el launcher: {e}")
+        input("\nPresiona Enter para salir...")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n\n⚠️  Programa interrumpido por el usuario")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\n❌ Error al iniciar la aplicacion: {e}")
+        import traceback
+        traceback.print_exc()
+        input("\nPresiona Enter para salir...")
+        sys.exit(1)
 
-        if opcion == '1':
-            import capturar_secuencias
-            capturar_secuencias.main()
-        elif opcion == '2':
-            import entrenar_modelo
-            entrenar_modelo.main()
-        elif opcion == '3':
-            import predecir_secuencias
-            predecir_secuencias.main()
-        elif opcion == '4':
-            print("\n👋 Saliendo del sistema.")
-            sys.exit(0)
-        else:
-            print("\n❌ Opción inválida. Intente de nuevo.")
-
-        input("\nPresione ENTER para continuar...")
 
 if __name__ == '__main__':
     main()

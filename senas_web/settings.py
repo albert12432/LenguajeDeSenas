@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-lngz&b_9e_)ue5r88mbytx9%r$2pgov8sr65b1kbqkdw$ys5&s
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', '0.0.0.0']
 
 
 # Application definition
@@ -75,18 +75,9 @@ WSGI_APPLICATION = 'senas_web.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'mssql',
-        'NAME': 'LsDB',    
-        'USER': 'user',
-        'PASSWORD': '1234',
-        'HOST': 'MAYQUIROZ\\SQLEXPRESS',       
-        'PORT': '',                 
-        'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
-            'host_is_server': True, # Para asegurar que HOST se trata como SERVER
-            'server': 'ALDYCASERES\\SQLEXPRESS',
-}
-}
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 

@@ -1,18 +1,21 @@
+# -*- coding: utf-8 -*-
 # predecir_secuencias.py - Predicción en tiempo real con modelo LSTM
-# Captura secuencias de video con Holistic, predice gestos con un modelo LSTM y muestra el resultado en pantalla
+# Captura secuencias de video con Holistic, predice gestos con un modelo
+# LSTM y muestra el resultado en pantalla
 
 import cv2
 import time
 import numpy as np
 import pickle
 import os
-from collections import deque, Counter
+from collections import deque
 from tensorflow.keras.models import load_model
 from utils import (
-    Config, initialize_holistic, setup_camera, 
+    Config, initialize_holistic, setup_camera,
     extract_holistic_landmarks, normalize_landmarks, validate_landmarks
 )
 from PIL import Image
+
 
 # Carga los frames de un gif correspondiente a una clase reconocida
 def reproducir_gif(ruta_gif):
@@ -33,6 +36,7 @@ def reproducir_gif(ruta_gif):
         pass
     return frames
 
+
 def main():
     print("\n🔮 PREDICCIÓN EN TIEMPO REAL - MODO UNIFICADO")
 
@@ -47,7 +51,7 @@ def main():
 
     # Buffers para almacenar frames y resultados de predicción recientes
     buffer = deque(maxlen=Config.FRAMES_PER_SEQUENCE)
-    pred_buffer = deque(maxlen=3)
+    pred_buffer = deque(maxlen=Config.CONSISTENT_PREDICTIONS * 2)
 
     gesto_actual = ""
     ultimo_tiempo = 0
@@ -70,38 +74,78 @@ def main():
 
         # Cuando se completa el buffer de secuencia
         if len(buffer) == Config.FRAMES_PER_SEQUENCE:
-            secuencia = np.array(buffer).reshape(1, Config.FRAMES_PER_SEQUENCE, Config.FEATURES)
+            secuencia = np.array(buffer).reshape(
+                1, Config.FRAMES_PER_SEQUENCE, Config.FEATURES
+            )
             pred = model.predict(secuencia, verbose=0)[0]
-            idx = np.argmax(pred)
-            confianza = pred[idx]
+            top_indices = np.argsort(pred)[-2:][::-1]
+            idx = top_indices[0]
+            confianza = float(pred[idx])
+            if len(top_indices) > 1:
+                segunda_confianza = float(pred[top_indices[1]])
+            else:
+                segunda_confianza = 0.0
+            brecha_confianza = confianza - segunda_confianza
             pred_buffer.append(idx)
 
-            # Si la predicción es suficientemente confiable y consistente
-            if confianza > 0.6 and pred_buffer.count(idx) >= 2:
+            es_confiable = (
+                confianza >= Config.MIN_CONFIDENCE
+                and brecha_confianza >= Config.MIN_CONFIDENCE_GAP
+                and pred_buffer.count(idx) >= Config.CONSISTENT_PREDICTIONS
+            )
+
+            if es_confiable:
                 gesto_actual = etiquetas[idx]
                 ultimo_tiempo = time.time()
-                print(f"🎯 GESTO DETECTADO: {gesto_actual.upper()} (confianza: {confianza:.2f})")
+                mensaje = (
+                    f"{gesto_actual.upper()} (conf: {confianza:.2f}, "
+                    f"gap: {brecha_confianza:.2f})"
+                )
+                print(f"🎯 GESTO DETECTADO: {mensaje}")
 
-                # Carga el gif de referencia de la clase detectada
                 ruta_gif = os.path.join(Config.GIFS_DIR, f"{gesto_actual}.gif")
                 frames_gif = reproducir_gif(ruta_gif)
                 gif_idx = 0
+            else:
+                gesto_actual = ""
+                frames_gif = []
 
             buffer.clear()
 
         # Muestra el gesto detectado en el frame principal
-        if gesto_actual and (time.time() - ultimo_tiempo < 2.5):
-            cv2.putText(frame, f"{gesto_actual.upper()}", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 4)
+        es_reciente = time.time() - ultimo_tiempo < Config.MAX_PREDICTION_AGE
+        if gesto_actual and es_reciente:
+            cv2.putText(
+                frame,
+                f"{gesto_actual.upper()}",
+                (10, 80),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                2,
+                (0, 255, 0),
+                4,
+            )
+
         else:
             gesto_actual = ""
             frames_gif = []
 
-        cv2.putText(frame, "'Q'=salir", (10, frame.shape[0]-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200,200,200), 1)
+        cv2.putText(
+            frame,
+            "'Q'=salir",
+            (10, frame.shape[0] - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (200, 200, 200),
+            1,
+        )
         cv2.imshow("Reconocimiento de Señas (Holistic)", frame)
 
         # Ventana secundaria que reproduce el gif del gesto identificado
         if frames_gif:
-            cv2.imshow("Ejemplo Identificado", frames_gif[gif_idx % len(frames_gif)])
+            cv2.imshow(
+                "Ejemplo Identificado",
+                frames_gif[gif_idx % len(frames_gif)],
+            )
             gif_idx += 1
 
         if cv2.waitKey(30) & 0xFF == ord('q'):
@@ -113,11 +157,17 @@ def main():
     holistic.close()
     print("\n👋 Predicción finalizada.")
 
+
 def predecir_desde_imagen(imagen):
     import mediapipe as mp
     import numpy as np
     from tensorflow.keras.models import load_model
-    from utils import extract_holistic_landmarks, normalize_landmarks, validate_landmarks, Config
+    from utils import (
+        Config,
+        extract_holistic_landmarks,
+        normalize_landmarks,
+        validate_landmarks,
+    )
 
     mp_holistic = mp.solutions.holistic
     with mp_holistic.Holistic(static_image_mode=True) as holistic:
@@ -135,6 +185,7 @@ def predecir_desde_imagen(imagen):
         pred = modelo.predict(secuencia)
         clase_idx = np.argmax(pred)
         return etiquetas[clase_idx]
+
 
 if __name__ == '__main__':
     main()
